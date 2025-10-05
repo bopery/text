@@ -1,108 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homies Chat - Real-time</title>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <style>
-    body{margin:0;font-family:sans-serif;background:#0f1724;color:#e6eef6;display:flex;justify-content:center;align-items:center;height:100vh;}
-    .chat-container{width:90%;max-width:800px;background:#0b1220;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;}
-    #messages{height:400px;overflow-y:auto;background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;}
-    .message{margin-bottom:8px;padding:6px 10px;border-radius:6px;}
-    .me{background:rgba(31,182,255,0.12);align-self:flex-end;}
-    .them{background:rgba(255,255,255,0.02);align-self:flex-start;}
-    input, button{padding:10px;border-radius:8px;border:none;}
-    input{flex:1;background:rgba(255,255,255,0.02);color:#e6eef6;outline:none;}
-    button{background:#1fb6ff;color:#021528;cursor:pointer;}
-    .input-row{display:flex;gap:8px;}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homies Chat</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+body{margin:0;font-family:sans-serif;background:#0f1724;color:#e6eef6;display:flex;justify-content:center;align-items:center;height:100vh;}
+.chat-container{width:90%;max-width:800px;background:#0b1220;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;}
+#messages{height:400px;overflow-y:auto;background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;}
+.message{margin-bottom:8px;padding:6px 10px;border-radius:6px;}
+.me{background:rgba(31,182,255,0.12);align-self:flex-end;}
+.them{background:rgba(255,255,255,0.02);align-self:flex-start;}
+input, button{padding:10px;border-radius:8px;border:none;}
+input{flex:1;background:rgba(255,255,255,0.02);color:#e6eef6;outline:none;}
+button{background:#1fb6ff;color:#021528;cursor:pointer;}
+.input-row{display:flex;gap:8px;}
+</style>
 </head>
 <body>
-  <div class="chat-container">
-    <div id="invite-section">
-      <input type="password" id="inviteCode" placeholder="Enter invite code">
-      <button id="joinBtn">Join</button>
-      <div id="error" style="color:#ff7b7b;margin-top:8px;display:none;">Wrong invite code</div>
-    </div>
-
-    <div id="nickname-section" style="display:none;">
-      <input type="text" id="nickname" placeholder="Your nickname">
-      <button id="setNick">Set Nickname</button>
-    </div>
-
-    <div id="chat-section" style="display:none;flex-direction:column;gap:8px;">
-      <div id="messages"></div>
-      <div class="input-row">
-        <input type="text" id="textIn" placeholder="Type a message...">
-        <button id="sendBtn">Send</button>
-      </div>
-    </div>
+<div class="chat-container">
+  <div id="invite-section">
+    <input type="password" id="inviteCode" placeholder="Enter invite code">
+    <button id="joinBtn">Join</button>
+    <div id="error" style="color:#ff7b7b;margin-top:8px;display:none;">Wrong invite code</div>
   </div>
 
+  <div id="nickname-section" style="display:none;">
+    <input type="text" id="nickname" placeholder="Your nickname">
+    <button id="setNick">Set Nickname</button>
+  </div>
+
+  <div id="chat-section" style="display:none;flex-direction:column;gap:8px;">
+    <div id="messages"></div>
+    <div class="input-row">
+      <input type="text" id="textIn" placeholder="Type a message...">
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  // Firebase setup
-  const firebaseConfig = {
-    apiKey: "AIzaSyEXAMPLE",
-    authDomain: "homies-chat.firebaseapp.com",
-    databaseURL: "https://homies-chat-default-rtdb.firebaseio.com",
-    projectId: "homies-chat",
-    storageBucket: "homies-chat.appspot.com",
-    messagingSenderId: "1234567890",
-    appId: "1:1234567890:web:abcdef"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-  const INVITE_CODE = 'HOMIEMASTERLOL'; // Hidden invite code
-  const joinBtn = document.getElementById('joinBtn');
-  const inviteInput = document.getElementById('inviteCode');
-  const errorDiv = document.getElementById('error');
+const INVITE_CODE = 'HOMIEMASTERLOL';
+const joinBtn = document.getElementById('joinBtn');
+const inviteInput = document.getElementById('inviteCode');
+const errorDiv = document.getElementById('error');
+const nicknameSection = document.getElementById('nickname-section');
+const setNickBtn = document.getElementById('setNick');
+const nicknameInput = document.getElementById('nickname');
+let nickname = '';
 
-  const nicknameSection = document.getElementById('nickname-section');
-  const setNickBtn = document.getElementById('setNick');
-  const nicknameInput = document.getElementById('nickname');
-  let nickname = '';
+const chatSection = document.getElementById('chat-section');
+const messagesDiv = document.getElementById('messages');
+const textIn = document.getElementById('textIn');
+const sendBtn = document.getElementById('sendBtn');
 
-  const chatSection = document.getElementById('chat-section');
-  const messagesDiv = document.getElementById('messages');
-  const textIn = document.getElementById('textIn');
-  const sendBtn = document.getElementById('sendBtn');
+function scrollToBottom(){ messagesDiv.scrollTop = messagesDiv.scrollHeight; }
 
-  joinBtn.addEventListener('click', () => {
-    if(inviteInput.value === INVITE_CODE){
-      errorDiv.style.display = 'none';
-      inviteInput.parentElement.style.display = 'none';
-      nicknameSection.style.display = 'flex';
-    } else {
-      errorDiv.style.display = 'block';
-    }
-  });
+joinBtn.addEventListener('click', () => {
+  if(inviteInput.value === INVITE_CODE){
+    errorDiv.style.display = 'none';
+    inviteInput.parentElement.style.display = 'none';
+    nicknameSection.style.display = 'flex';
+  } else {
+    errorDiv.style.display = 'block';
+  }
+});
 
-  setNickBtn.addEventListener('click', () => {
-    nickname = nicknameInput.value || 'Anonymous';
-    nicknameSection.style.display = 'none';
-    chatSection.style.display = 'flex';
-    // Listen for messages
-    db.ref('messages').on('child_added', snapshot => {
-      const msg = snapshot.val();
+setNickBtn.addEventListener('click', () => {
+  nickname = nicknameInput.value || 'Anonymous';
+  nicknameSection.style.display = 'none';
+  chatSection.style.display = 'flex';
+  localStorage.setItem('homies_nickname', nickname);
+
+  // Load all messages once
+  db.ref('messages').once('value', snapshot => {
+    messagesDiv.innerHTML = '';
+    snapshot.forEach(child => {
+      const msg = child.val();
       const el = document.createElement('div');
       el.className = 'message ' + (msg.nick === nickname ? 'me':'them');
       el.textContent = msg.nick + ': ' + msg.text;
       messagesDiv.appendChild(el);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
+    scrollToBottom();
   });
 
-  sendBtn.addEventListener('click', () => {
-    const text = textIn.value.trim();
-    if(!text) return;
-    db.ref('messages').push({nick:nickname, text:text, t:Date.now()});
-    textIn.value='';
+  // Listen for new messages
+  db.ref('messages').on('child_added', snapshot => {
+    const msg = snapshot.val();
+    const el = document.createElement('div');
+    el.className = 'message ' + (msg.nick === nickname ? 'me':'them');
+    el.textContent = msg.nick + ': ' + msg.text;
+    messagesDiv.appendChild(el);
+    scrollToBottom();
+  });
+});
+
+// Send message
+sendBtn.addEventListener('click', () => {
+  const text = textIn.value.trim();
+  if(!text) return;
+  db.ref('messages').push({nick:nickname,text:text,t:Date.now()});
+  textIn.value='';
+});
+
+textIn.addEventListener('keydown', e => { if(e.key==='Enter') sendBtn.click(); });
+
+// Reload nickname if already stored
+const savedNick = localStorage.getItem('homies_nickname');
+if(savedNick){
+  nickname = savedNick;
+  nicknameSection.style.display = 'none';
+  chatSection.style.display = 'flex';
+
+  db.ref('messages').once('value', snapshot => {
+    messagesDiv.innerHTML = '';
+    snapshot.forEach(child => {
+      const msg = child.val();
+      const el = document.createElement('div');
+      el.className = 'message ' + (msg.nick === nickname ? 'me':'them');
+      el.textContent = msg.nick + ': ' + msg.text;
+      messagesDiv.appendChild(el);
+    });
+    scrollToBottom();
   });
 
-  textIn.addEventListener('keydown', e => { if(e.key==='Enter') sendBtn.click(); });
+  db.ref('messages').on('child_added', snapshot => {
+    const msg = snapshot.val();
+    const el = document.createElement('div');
+    el.className = 'message ' + (msg.nick === nickname ? 'me':'them');
+    el.textContent = msg.nick + ': ' + msg.text;
+    messagesDiv.appendChild(el);
+    scrollToBottom();
+  });
+}
 </script>
 </body>
 </html>
